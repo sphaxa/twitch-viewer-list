@@ -23,7 +23,7 @@ setInterval(function() {
     userlist = [];
     console.log("Cleared user list.");
     getUsers(globaltoken);
-}, 500000);
+}, 60000);
 
 function getUsers(token, cursor) {
     globaltoken = token;
