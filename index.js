@@ -1,6 +1,6 @@
 const axios = require('axios')
 
-require('dotenv').config()
+//require('dotenv').config()
 var port = process.env.PORT || 5000;
 
 const express = require('express')
