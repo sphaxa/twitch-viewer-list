@@ -17,7 +17,7 @@ const moderatorid = process.env.MODERATOR_ID;
 
 var globaltoken;
 
-getUsers("");
+reAuth();
 
 setInterval(function() {
     userlist = [];
@@ -43,7 +43,10 @@ function getUsers(token, cursor) {
         if (response.status == 200) {
             updateUserList(response.data.data);
             if (!isEmpty(response.data.pagination)) {
+                console.log("Paging needed. Adding more users...");
                 getUsers(token, response.data.pagination.cursor);
+            } else {
+                console.log("Adding users complete.")
             }
         }
     })
