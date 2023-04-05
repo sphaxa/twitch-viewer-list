@@ -31,7 +31,7 @@ function getUsers(token, cursor) {
         params: {
             broadcaster_id: broadcasterid,
             moderator_id: moderatorid,
-            first: '50',
+            first: '1000',
             after: cursor
         },
         headers: {
