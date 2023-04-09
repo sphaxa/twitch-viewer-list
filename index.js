@@ -81,7 +81,8 @@ function updateUserList(rawusers) {
 }
 
 function chooseUser(id) {
-    return userlist[id][Math.floor(Math.random()*userlist[id].length)];
+    let list = userlist[id];
+    return list[Math.floor(Math.random()*list.length)];
 }
 
 function reAuth() {
