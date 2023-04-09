@@ -6,22 +6,32 @@ var port = process.env.PORT || 5000;
 const express = require('express')
 const app = express()
 
-var userlist = [];
+const broadcaster_ids = require('./broadcaster_ids.json')
+
+var userlist = {};
 
 const refreshtoken = process.env.REFRESH_TOKEN;
 const clientid = process.env.CLIENT_ID;
 const clientsecret = process.env.CLIENT_SECRET;
 
-const broadcasterid = process.env.BROADCASTER_ID;
 const moderatorid = process.env.MODERATOR_ID;
 
 var globaltoken;
+var indextorefresh = 0;
 
-reAuth();
+Initalize();
+
+function Initalize() {
+    broadcaster_ids.forEach(id => {
+        userlist[id] = ["nobody"];
+    });
+
+    reAuth();
+}
 
 setInterval(function() {
-    userlist = [];
-    console.log("Cleared user list.");
+    userlist[broadcaster_ids[indextorefresh]] = [];
+    console.log("[" + broadcaster_ids[indextorefresh] + "] " + "Cleared user list.");
     getUsers(globaltoken);
 }, 60000);
 
@@ -29,7 +39,7 @@ function getUsers(token, cursor) {
     globaltoken = token;
     axios.get('https://api.twitch.tv/helix/chat/chatters', {
         params: {
-            broadcaster_id: broadcasterid,
+            broadcaster_id: broadcaster_ids[indextorefresh],
             moderator_id: moderatorid,
             first: '1000',
             after: cursor
@@ -43,15 +53,20 @@ function getUsers(token, cursor) {
         if (response.status == 200) {
             updateUserList(response.data.data);
             if (!isEmpty(response.data.pagination)) {
-                console.log("Paging needed. Adding more users...");
                 getUsers(token, response.data.pagination.cursor);
+                console.log("[" + broadcaster_ids[indextorefresh] + "] " + "Paging needed... Requesting next page.");
             } else {
-                console.log("Adding users complete.")
+                console.log("[" + broadcaster_ids[indextorefresh] + "] " + "Adding users complete.");
+                if (indextorefresh === broadcaster_ids.length - 1) {
+                    indextorefresh = 0;
+                } else {
+                    indextorefresh++;
+                }
             }
         }
     })
     .catch(function (error) {
-        console.log("Failed to get user list. Attempting to re-authorize...");
+        console.log("[" + broadcaster_ids[indextorefresh] + "] " + "Failed to get user list. Attempting to re-authorize...");
         reAuth();
     });
 }
@@ -61,12 +76,12 @@ function isEmpty(obj) {
 }
 
 function updateUserList(rawusers) {
-    rawusers.forEach(u => userlist.push(u.user_name));
-    console.log("Added " + rawusers.length + " users to list.")
+    rawusers.forEach(u => userlist[broadcaster_ids[indextorefresh]].push(u.user_name));
+    console.log("[" + broadcaster_ids[indextorefresh] + "] " + "Added " + rawusers.length + " users to list.")
 }
 
-function chooseUser() {
-    return userlist[Math.floor(Math.random()*userlist.length)];
+function chooseUser(id) {
+    return userlist[id][Math.floor(Math.random()*userlist[id].length)];
 }
 
 function reAuth() {
@@ -88,8 +103,8 @@ function reAuth() {
     });
 }
 
-app.get('/', (req, res) => {
-    res.send(chooseUser())
+app.get('/:id', (req, res) => {
+    res.send(chooseUser(req.params.id))
 })
 
 app.listen(port, () => {
